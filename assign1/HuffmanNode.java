@@ -8,12 +8,12 @@
 package assign1;
 
 public class HuffmanNode implements Comparable<HuffmanNode> {
-    public char symbol;
+    public int symbol;
     public int freq;
     public HuffmanNode leftChild;
     public HuffmanNode rightChild;
 
-    public HuffmanNode(char symbol, int freq, HuffmanNode leftChild, HuffmanNode rightChild) {
+    public HuffmanNode(int symbol, int freq, HuffmanNode leftChild, HuffmanNode rightChild) {
         this.symbol = symbol;
         this.freq = freq;
         this.leftChild = leftChild;
@@ -32,6 +32,5 @@ public class HuffmanNode implements Comparable<HuffmanNode> {
 
         return Integer.compare(this.symbol, other.symbol);
     }
-
 
 }

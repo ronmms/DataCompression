@@ -5,6 +5,8 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.PriorityQueue;
@@ -28,30 +30,31 @@ public class HuffmanEncoderDecoder implements Compressor {
     // This list will contain all symbols frequencys in the given file
     private int[] freq = new int[65537];
     private PriorityQueue<HuffmanNode> q = new PriorityQueue<>();
-    private HashMap<Character, String> dict = new HashMap<>();
+    private HashMap<Integer, String> dict = new HashMap<>();
     private HuffmanNode treeRoot;
     private int wordCount = 0;
 
     public HuffmanEncoderDecoder() {
         // TODO Auto-generated constructor stub
     }
-    private int buildIntFromByteArray(byte[] b){
+
+    private int buildIntFromByteArray(byte[] b) {
         if (BitSet.valueOf(b).toLongArray().length > 0) {
-            return (int)BitSet.valueOf(b).toLongArray()[0];
+            return (int) BitSet.valueOf(b).toLongArray()[0];
         } else {
             return 0;
         }
     }
+
     private void buildFreq(String[] input_names, byte[] fc) {
         try {
-            FileInputStream input = new FileInputStream(input_names[0]);
-            for(int i=0;i<fc.length-1;i+=2){
+            for (int i = 0; i < fc.length - 1; i += 2) {
                 byte[] word = new byte[2];
                 word[0] = fc[i];
-                word[1] = fc[i+1];
+                word[1] = fc[i + 1];
                 int content = buildIntFromByteArray(word);
                 freq[content]++;
-                wordCount++;
+                wordCount += 2;
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -85,21 +88,22 @@ public class HuffmanEncoderDecoder implements Compressor {
             byte[] fc = input.readAllBytes();
             buildDict(input_names, fc);
             StringBuilder compressedFile = new StringBuilder();
-            for(int i=0;i<fc.length-1;i+=2){
+            for (int i = 0; i < fc.length - 1; i += 2) {
                 byte[] word = new byte[2];
                 word[0] = fc[i];
-                word[1] = fc[i+1];
+                word[1] = fc[i + 1];
                 int content = buildIntFromByteArray(word);
-                compressedFile.append(dict.get((char) content));
+                compressedFile.append(dict.get(content));
             }
             writeBitStringToFile(compressedFile, output_names);
+            input.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
     }
 
-    private void buildDictionary(HuffmanNode node, String string, HashMap<Character, String> dictionary) {
+    private void buildDictionary(HuffmanNode node, String string, HashMap<Integer, String> dictionary) {
         if (!node.isLeaf()) {
             buildDictionary(node.leftChild, string + '0', dictionary);
             buildDictionary(node.rightChild, string + '1', dictionary);
@@ -129,9 +133,9 @@ public class HuffmanEncoderDecoder implements Compressor {
     @Override
     public void Decompress(String[] input_names, String[] output_names) {
 
-        StringBuilder decompressedFile = new StringBuilder();
+        ArrayList<Byte> decompressedFile = new ArrayList<Byte>();
         FileInputStream input;
-        FileWriter output;
+        FileOutputStream output;
         int content;
         HuffmanNode node = treeRoot;
         char bit = '\0';
@@ -139,10 +143,10 @@ public class HuffmanEncoderDecoder implements Compressor {
         try {
             input = new FileInputStream(input_names[0]);
             byte[] fc = input.readAllBytes();
-            for(int i=0;i<fc.length-1;i+=2){
+            for (int i = 0; i < fc.length - 1; i += 2) {
                 byte[] word = new byte[2];
                 word[0] = fc[i];
-                word[1] = fc[i+1];
+                word[1] = fc[i + 1];
                 content = buildIntFromByteArray(word);
                 boolean moreThanBit = true;
                 while (moreThanBit && content != -1) {
@@ -155,8 +159,10 @@ public class HuffmanEncoderDecoder implements Compressor {
                             node = node.leftChild;
                         }
                         if (node.isLeaf()) {
-                            decompressedFile.append(node.symbol);
-                            wordCount--;
+                            byte[] test = ByteBuffer.allocate(4).putInt(node.symbol).array();
+                            decompressedFile.add(ByteBuffer.allocate(4).putInt(node.symbol).array()[3]);
+                            decompressedFile.add(ByteBuffer.allocate(4).putInt(node.symbol).array()[2]);
+                            wordCount -= 2;
                             node = treeRoot;
                         }
                     }
@@ -167,8 +173,12 @@ public class HuffmanEncoderDecoder implements Compressor {
                 node = treeRoot;
             }
             System.out.println(output_names[0]);
-            output = new FileWriter(output_names[0]);
-            output.write(decompressedFile.toString());
+            output = new FileOutputStream(output_names[0]);
+            byte[] tmp = new byte[decompressedFile.size()];
+            for (int i = 0; i < tmp.length; i++) {
+                tmp[i] = decompressedFile.get(i);
+            }
+            output.write(tmp);
             output.close();
         } catch (IOException e) {
             e.printStackTrace();
