@@ -1,8 +1,9 @@
 /**
  * Assignment 1
- * Submitted by: 
+ * Submitted by:
  * Ron Cohen. 	ID# 208401349
  * Noam Boni. 	ID# 315586131
+ * Shai Buaron. ID# 203236138
  */
 package assign1;
 
@@ -24,7 +25,6 @@ public class HuffmanNode implements Comparable<HuffmanNode> {
     }
 
     @Override
-    // For heap uses
     public int compareTo(HuffmanNode other) {
         int freqcompare = Integer.compare(this.freq, other.freq);
         if (freqcompare != 0)
@@ -32,5 +32,6 @@ public class HuffmanNode implements Comparable<HuffmanNode> {
 
         return Integer.compare(this.symbol, other.symbol);
     }
+
 
 }
